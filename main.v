@@ -165,22 +165,27 @@ fn new_resolution(inWidth int, inHeight int) (int, int, ) {mut out_width:=0
 mut out_height:=0 
 mut aspect:=stretch .split(":" ,)  
 mut aspect_width,err_1:=strconv.atoi(aspect[0 ] ,)  
+
 if err_1  !=  unsafe { nil }  {
-log.print(err_1 ,)
+  log.print(err_1 ,)
 }
 mut aspect_height,err_2:=strconv.atoi(aspect[1 ] ,)  
+
 if err_2  !=  unsafe { nil }  {
-log.print(err_2 ,)
+  log.print(err_2 ,)
 }
+
 if out_scale  ==  - 1   {
-out_scale=1.0  /  f64(preset ,)   
+  out_scale=1.0  /  f64(preset ,)   
 }
 out_width=int(math.round(f64(inWidth ,)  *  out_scale   *  f64(aspect_width ,)  ,)  /  2  ,)  *  2   
 out_height=int(math.round(f64(inHeight ,)  *  out_scale   *  f64(aspect_height ,)  ,)  /  2  ,)  *  2   
+
 return out_width ,out_height 
 }
 
 fn make_text_filter(outWidth int, inText string, font string, size f64, color string, xpos int, ypos int) (string, ) {mut font_path,err_1:=findfont.find(font  +  ".ttf"  ,)  
+
 if err_1  !=  unsafe { nil }  {
   panic(err_1 ,)
 }
@@ -264,7 +269,7 @@ if debug {
 }
 mut encoding_file_out_of:='' 
 if totalNum  !=  1  {
-encoding_file_out_of="["  +  strconv.itoa(inNum ,)   +  "/"   +  strconv.itoa(totalNum ,)   +  "] "   
+  encoding_file_out_of="["  +  strconv.itoa(inNum ,)   +  "/"   +  strconv.itoa(totalNum ,)   +  "] "   
 }
 println('${str_fmt.working}${encoding_file_out_of}Encoding ${str_fmt.working_hl}${filepath.base(input_1 ,) }${str_fmt.working}to${str_fmt.working_hl}${filepath.base(output ,) }${str_fmt.reset}' ,)
 mut cmd:=exec.command("ffmpeg" ,... args  ,)  
@@ -273,10 +278,11 @@ cmd.wait()
 mut new_output:='' 
 mut start_time_1:=time.now()  
 mut eta:=0.0  
+
 if image_passes  >  1  {
-mut err_1:=os.mkdir_all("temp" ,os.mode_perm ,) 
-if err_1  !=  unsafe { nil }  {
-log.fatal(err_1 ,)
+  mut err_1:=os.mkdir_all("temp" ,os.mode_perm ,) 
+  if err_1  !=  unsafe { nil }  {
+  log.fatal(err_1 ,)
 }
 new_output="temp/loop1.jpg"  
 cmd=exec.command("ffmpeg" ,"-y" ,"-loglevel" ,loglevel ,"-hide_banner" ,"-progress" ,"-" ,"-stats_period" ,strconv.format_float(update_speed ,`f` ,- 1  ,64 ,) ,"-i" ,output ,"-c:v" ,"mjpeg" ,"-q:v" ,"31" ,"-frames:v" ,"1" ,new_output ,)  
@@ -284,22 +290,24 @@ cmd.start()
 cmd.wait()
 eta=get_eta(start_time_1 ,1 ,1 ,)  
 if unspecified_progbar_size {
-progbar_length=utils.progbar_size(" "  +  (strconv.format_float((1  *  100   /  f64(image_passes ,)  ) ,`f` ,1 ,64 ,)  +  "%"   +  " ETA: "   +  utils.trim_time(utils.format_time(eta ,) ,)  )  .len ,)  
+  progbar_length=utils.progbar_size(" "  +  (strconv.format_float((1  *  100   /  f64(image_passes ,)  ) ,`f` ,1 ,64 ,)  +  "%"   +  " ETA: "   +  utils.trim_time(utils.format_time(eta ,) ,)  )  .len ,)  
 }
+
 if progbar_length  >  0  {
-print(utils.progress_bar(1 ,f64(image_passes ,) ,progbar_length ,) ,)
-}else {
-print("\033[0J" ,)
+  print(utils.progress_bar(1 ,f64(image_passes ,) ,progbar_length ,) ,)
+  } else {
+  print("\033[0J" ,)
 }
+
 println('  ${strconv.format_float((1  *  100   /  f64(image_passes ,)  ) ,`f` ,1 ,64 ,) }% ETA: ${utils.trim_time(utils.format_time(eta ,) ,) }\033[0J' ,)
 if debug {
-log.print("libwebp:" ,)
-log.print("compression level: "  +  strconv.itoa(int(f64(1  /  f64(preset ,)  ,)  *  7.0  ,)  -  1  ,)  ,)
-log.print("quality: "  +  strconv.itoa(((preset )  *  12  )  +  16  ,)  ,)
-log.print("libx264:" ,)
-log.print("crf: "  +  strconv.itoa(int(f64(preset ,)  *  (51.0  /  7.0  )  ,) ,)  ,)
-log.print("mjpeg:" ,)
-log.print("q:v: "  +  strconv.itoa(int(f64(preset ,)  *  3.0  ,)  +  10  ,)  ,)
+  log.print("libwebp:" ,)
+  log.print("compression level: "  +  strconv.itoa(int(f64(1  /  f64(preset ,)  ,)  *  7.0  ,)  -  1  ,)  ,)
+  log.print("quality: "  +  strconv.itoa(((preset )  *  12  )  +  16  ,)  ,)
+  log.print("libx264:" ,)
+  log.print("crf: "  +  strconv.itoa(int(f64(preset ,)  *  (51.0  /  7.0  )  ,) ,)  ,)
+  log.print("mjpeg:" ,)
+  log.print("q:v: "  +  strconv.itoa(int(f64(preset ,)  *  3.0  ,)  +  10  ,)  ,)
 }
 mut old_output:='' 
 for i_1:=2  ;i_1  <  image_passes  -  1   ;i_1++ {
@@ -310,13 +318,15 @@ cmd.start()
 cmd.wait()
 os.remove(old_output ,)
 eta=get_eta(start_time_1 ,f64(i_1 ,) ,f64(image_passes ,) ,)  
+
 if unspecified_progbar_size {
-progbar_length=utils.progbar_size(" "  +  (strconv.format_float((f64(i_1 ,)  *  100   /  f64(image_passes ,)  ) ,`f` ,1 ,64 ,)  +  "%"   +  " ETA: "   +  utils.trim_time(utils.format_time(eta ,) ,)  )  .len ,)  
+  progbar_length=utils.progbar_size(" "  +  (strconv.format_float((f64(i_1 ,)  *  100   /  f64(image_passes ,)  ) ,`f` ,1 ,64 ,)  +  "%"   +  " ETA: "   +  utils.trim_time(utils.format_time(eta ,) ,)  )  .len ,)  
 }
+
 if progbar_length  >  0  {
-print('\033[1A ${utils.progress_bar(f64(i_1 ,) ,f64(image_passes ,) ,progbar_length ,) }' ,)
-}else {
-print("\033[1A\033[0J" ,)
+  print('\033[1A ${utils.progress_bar(f64(i_1 ,) ,f64(image_passes ,) ,progbar_length ,) }' ,)
+  } else {
+  print("\033[1A\033[0J" ,)
 }
 println('  ${strconv.format_float((f64(i_1 ,)  *  100   /  f64(image_passes ,)  ) ,`f` ,1 ,64 ,) }% ETA: ${utils.trim_time(utils.format_time(eta ,) ,) }\033[0J' ,)
 i_1++
@@ -327,13 +337,15 @@ cmd.start()
 cmd.wait()
 os.remove(old_output ,)
 eta=get_eta(start_time_1 ,f64(i_1 ,) ,f64(image_passes ,) ,)  
+
 if unspecified_progbar_size {
-progbar_length=utils.progbar_size(" "  +  (strconv.format_float((f64(i_1 ,)  *  100   /  f64(image_passes ,)  ) ,`f` ,1 ,64 ,)  +  "%"   +  " ETA: "   +  utils.trim_time(utils.format_time(eta ,) ,)  )  .len ,)  
+  progbar_length=utils.progbar_size(" "  +  (strconv.format_float((f64(i_1 ,)  *  100   /  f64(image_passes ,)  ) ,`f` ,1 ,64 ,)  +  "%"   +  " ETA: "   +  utils.trim_time(utils.format_time(eta ,) ,)  )  .len ,)  
 }
+
 if progbar_length  >  0  {
-print('\033[1A ${utils.progress_bar(f64(i_1 ,) ,f64(image_passes ,) ,progbar_length ,) }' ,)
-}else {
-print("\033[1A\033[0J" ,)
+  print('\033[1A ${utils.progress_bar(f64(i_1 ,) ,f64(image_passes ,) ,progbar_length ,) }' ,)
+  } else {
+  print("\033[1A\033[0J" ,)
 }
 println('  ${strconv.format_float((f64(i_1 ,)  *  100   /  f64(image_passes ,)  ) ,`f` ,1 ,64 ,) }% ETA: ${utils.trim_time(utils.format_time(eta ,) ,) }\033[0J' ,)
 i_1++
@@ -344,30 +356,36 @@ cmd.start()
 cmd.wait()
 os.remove(old_output ,)
 eta=get_eta(start_time_1 ,f64(i_1 ,) ,f64(image_passes ,) ,)  
+
 if unspecified_progbar_size {
-progbar_length=utils.progbar_size(" "  +  (strconv.format_float((f64(i_1 ,)  *  100   /  f64(image_passes ,)  ) ,`f` ,1 ,64 ,)  +  "%"   +  " ETA: "   +  utils.trim_time(utils.format_time(eta ,) ,)  )  .len ,)  
+  progbar_length=utils.progbar_size(" "  +  (strconv.format_float((f64(i_1 ,)  *  100   /  f64(image_passes ,)  ) ,`f` ,1 ,64 ,)  +  "%"   +  " ETA: "   +  utils.trim_time(utils.format_time(eta ,) ,)  )  .len ,)  
 }
+
 if progbar_length  >  0  {
-print('\033[1A ${utils.progress_bar(f64(i_1 ,) ,f64(image_passes ,) ,progbar_length ,) }' ,)
-}else {
-print("\033[1A\033[0J" ,)
+  print('\033[1A ${utils.progress_bar(f64(i_1 ,) ,f64(image_passes ,) ,progbar_length ,) }' ,)
+  } else {
+  print("\033[1A\033[0J" ,)
+  }
+  println('  ${strconv.format_float((f64(i_1 ,)  *  100   /  f64(image_passes ,)  ) ,`f` ,1 ,64 ,) }% ETA: ${utils.trim_time(utils.format_time(eta ,) ,) }\033[0J' ,)
 }
-println('  ${strconv.format_float((f64(i_1 ,)  *  100   /  f64(image_passes ,)  ) ,`f` ,1 ,64 ,) }% ETA: ${utils.trim_time(utils.format_time(eta ,) ,) }\033[0J' ,)
-}
+
 old_output=new_output  
 cmd=exec.command("ffmpeg" ,"-y" ,"-loglevel" ,loglevel ,"-hide_banner" ,"-progress" ,"-" ,"-stats_period" ,strconv.format_float(update_speed ,`f` ,- 1  ,64 ,) ,"-i" ,old_output ,"-c:v" ,"mjpeg" ,"-q:v" ,"31" ,"-frames:v" ,"1" ,output ,)  
 cmd.start()
 cmd.wait()
 os.remove(old_output ,)
-eta=get_eta(start_time_1 ,f64(image_passes ,) ,f64(image_passes ,) ,)  
+eta=get_eta(start_time_1 ,f64(image_passes ,) ,f64(image_passes ,) ,)
+  
 if unspecified_progbar_size {
-progbar_length=utils.progbar_size(" "  +  (strconv.format_float((f64(image_passes ,)  *  100   /  f64(image_passes ,)  ) ,`f` ,1 ,64 ,)  +  "%"   +  " ETA: "   +  utils.trim_time(utils.format_time(eta ,) ,)  )  .len ,)  
+  progbar_length=utils.progbar_size(" "  +  (strconv.format_float((f64(image_passes ,)  *  100   /  f64(image_passes ,)  ) ,`f` ,1 ,64 ,)  +  "%"   +  " ETA: "   +  utils.trim_time(utils.format_time(eta ,) ,)  )  .len ,)  
 }
+
 if progbar_length  >  0  {
-print('\033[1A ${utils.progress_bar(f64(image_passes ,) ,f64(image_passes ,) ,progbar_length ,) }' ,)
-}else {
-print("\033[1A\033[0J" ,)
+  print('\033[1A ${utils.progress_bar(f64(image_passes ,) ,f64(image_passes ,) ,progbar_length ,) }' ,)
+  } else {
+  print("\033[1A\033[0J" ,)
 }
+
 println('  ${strconv.format_float((f64(image_passes ,)  *  100   /  f64(image_passes ,)  ) ,`f` ,1 ,64 ,) }% ETA: ${utils.trim_time(utils.format_time(eta ,) ,) }\033[0J' ,)
 }
 }
@@ -378,133 +396,148 @@ inputData.height=1
 inputData.framerate=1.0  
 }
 if debug {
-log.print("resolution is " ,inputData.width ," by " ,inputData.height ,)
+  log.print("resolution is " ,inputData.width ," by " ,inputData.height ,)
 }
+
 if out_fps  ==  - 1   {
-out_fps=24  -  (3  *  preset  )   
+  out_fps=24  -  (3  *  preset  )   
 }
+
 if debug {
-log.print("Output FPS is " ,out_fps ,)
+  log.print("Output FPS is " ,out_fps ,)
 }
+
 mut fps_filter:=string("fps="  +  strconv.itoa(out_fps ,)  ) 
 mut tmix_frames:=int(0 ) 
 if resample {
-if out_fps  <=  int(inputData.framerate ,)  {
-tmix_frames=int(inputData.framerate ,)  /  out_fps   
-fps_filter="tmix=frames="  +  strconv.itoa(tmix_frames ,)   +  ":weights=1,fps="   +  strconv.itoa(out_fps ,)   
+  if out_fps  <=  int(inputData.framerate ,)  {
+  tmix_frames=int(inputData.framerate ,)  /  out_fps   
+  fps_filter="tmix=frames="  +  strconv.itoa(tmix_frames ,)   +  ":weights=1,fps="   +  strconv.itoa(out_fps ,)   
+
 if debug {
-log.print("resampling with tmix, tmix frames " ,tmix_frames ," and output fps is "  +  strconv.itoa(out_fps ,)  ,)
+  log.print("resampling with tmix, tmix frames " ,tmix_frames ," and output fps is "  +  strconv.itoa(out_fps ,)  ,)
+  }
+  } else {
+  log.fatal("Cannot resample from a lower framerate to a higher framerate (output fps exceeds input fps)" ,)
 }
-}else {
-log.fatal("Cannot resample from a lower framerate to a higher framerate (output fps exceeds input fps)" ,)
 }
-}
+
 if out_scale  ==  - 1   {
-out_scale=1.0  /  f64(preset ,)   
+  out_scale=1.0  /  f64(preset ,)   
 }
+
 if debug {
-log.print("Output scale is " ,out_scale ,)
+  log.print("Output scale is " ,out_scale ,)
 }
+
 mut output_width,output_height:=new_resolution(inputData.width ,inputData.height ,)  
 mut bitrate:=0 
 if video_br_div  !=  - 1   {
-bitrate=output_height  *  output_width   *  int(math.sqrt(f64(out_fps ,) ,) ,)   /  video_br_div   
-}else {
-bitrate=output_height  *  output_width   *  int(math.sqrt(f64(out_fps ,) ,) ,)   /  preset   
+  bitrate=output_height  *  output_width   *  int(math.sqrt(f64(out_fps ,) ,) ,)   /  video_br_div   
+  } else {
+  bitrate=output_height  *  output_width   *  int(math.sqrt(f64(out_fps ,) ,) ,)   /  preset   
 }
 mut audio_bitrate:=0 
 if audio_br_div  !=  - 1   {
-audio_bitrate=80000  /  audio_br_div   
-}else {
-audio_bitrate=80000  /  preset   
+  audio_bitrate=80000  /  audio_br_div   
+  } else {
+  audio_bitrate=80000  /  preset   
 }
+
 if debug {
-log.print("bitrate is " ,bitrate ," which i got by doing " ,output_height ,"*" ,output_width ,"*" ,int(math.sqrt(f64(out_fps ,) ,) ,) ,"/" ,preset ,)
+  log.print("bitrate is " ,bitrate ," which i got by doing " ,output_height ,"*" ,output_width ,"*" ,int(math.sqrt(f64(out_fps ,) ,) ,) ,"/" ,preset ,)
 }
 mut filter:=strings.Builder{} 
 if renderVideo {
-if speed  !=  1  {
-filter.write_string("setpts=(1/"  +  strconv.format_float(speed ,`f` ,- 1  ,64 ,)   +  ")*PTS,"  ,)
-if debug {
-log.print("speed is " ,speed ,)
-}
+  if speed  !=  1  {
+    filter.write_string("setpts=(1/"  +  strconv.format_float(speed ,`f` ,- 1  ,64 ,)   +  ")*PTS,"  ,)
+  if debug {
+    log.print("speed is " ,speed ,)
+  }
 }
 filter.write_string(fps_filter  +  ",scale="   +  strconv.itoa(output_width ,)   +  ":"   +  strconv.itoa(output_height ,)   +  ",setsar=1:1"  ,)
 if fadein  !=  0  {
-filter.write_string(",fade=t=in:d="  +  strconv.format_float(fadein ,`f` ,- 1  ,64 ,)  ,)
+  filter.write_string(",fade=t=in:d="  +  strconv.format_float(fadein ,`f` ,- 1  ,64 ,)  ,)
 if debug {
-log.print("fade in is " ,fadein ,)
+  log.print("fade in is " ,fadein ,)
 }
 }
+
 if fadeout  !=  0  {
-filter.write_string(",fade=t=out:d="  +  strconv.format_float(fadeout ,`f` ,- 1  ,64 ,)   +  ":st="   +  strconv.format_float((inputData.duration  -  fadeout  ) ,`f` ,- 1  ,64 ,)  ,)
-if debug {
-log.print("fade out duration is " ,fadeout ," start time is " ,(inputData.duration  -  fadeout  ) ,)
-}
+  filter.write_string(",fade=t=out:d="  +  strconv.format_float(fadeout ,`f` ,- 1  ,64 ,)   +  ":st="   +  strconv.format_float((inputData.duration  -  fadeout  ) ,`f` ,- 1  ,64 ,)  ,)
+  if debug {
+  log.print("fade out duration is " ,fadeout ," start time is " ,(inputData.duration  -  fadeout  ) ,)
+  }
 }
 if zoom  !=  1  {
-filter.write_string(",zoompan=d=1:zoom="  +  strconv.format_float(zoom ,`f` ,- 1  ,64 ,)   +  ":fps="   +  strconv.itoa(out_fps ,)   +  ":x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"  ,)
-if debug {
-log.print("zoom amount is " ,zoom ,)
+  filter.write_string(",zoompan=d=1:zoom="  +  strconv.format_float(zoom ,`f` ,- 1  ,64 ,)   +  ":fps="   +  strconv.itoa(out_fps ,)   +  ":x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"  ,)
+  if debug {
+  log.print("zoom amount is " ,zoom ,)
 }
+
 }
 if vignette  !=  0  {
-filter.write_string(",vignette=PI/(5/("  +  strconv.format_float(vignette ,`f` ,- 1  ,64 ,)   +  "/2))"  ,)
-if debug {
-log.print("vignette amount is " ,vignette ," or PI/(5/("  +  strconv.format_float(vignette ,`f` ,- 1  ,64 ,)   +  "/2))"  ,)
+  filter.write_string(",vignette=PI/(5/("  +  strconv.format_float(vignette ,`f` ,- 1  ,64 ,)   +  "/2))"  ,)
+  if debug {
+  log.print("vignette amount is " ,vignette ," or PI/(5/("  +  strconv.format_float(vignette ,`f` ,- 1  ,64 ,)   +  "/2))"  ,)
 }
 }
+
 if text  !=  ""  {
-filter.write_string(make_text_filter(output_width ,text ,text_font ,font_size ,text_color ,textposx ,textposy ,) ,)
+  filter.write_string(make_text_filter(output_width ,text ,text_font ,font_size ,text_color ,textposx ,textposy ,) ,)
 }
+
 if interlace {
-filter.write_string(",interlace" ,)
+  filter.write_string(",interlace" ,)
 }
+
 if lagfun {
-filter.write_string(",lagfun" ,)
+  filter.write_string(",lagfun" ,)
 }
+
 if stutter  !=  0  {
-filter.write_string(",random=frames="  +  strconv.itoa(stutter ,)  ,)
-if debug {
-log.print("stutter is " ,stutter ,)
+  filter.write_string(",random=frames="  +  strconv.itoa(stutter ,)  ,)
+  if debug {
+  log.print("stutter is " ,stutter ,)
 }
+
 }
 if fry  !=  0  {
-filter.write_string(","  +  "eq=saturation="   +  strconv.format_float(f64(fry ,)  *  0.15   +  0.85  ,`f` ,- 1  ,64 ,)   +  ":contrast="   +  strconv.itoa(fry ,)   +  ",unsharp=5:5:1.25:5:5:"   +  strconv.format_float(f64(fry ,)  /  6.66  ,`f` ,- 1  ,64 ,)   +  ",noise=alls="   +  strconv.itoa(fry  *  5  ,)   +  ":allf=t"  ,)
-if debug {
-log.print("fry is " ,","  +  "eq=saturation="   +  strconv.format_float(f64(fry ,)  *  0.15   +  0.85  ,`f` ,- 1  ,64 ,)   +  ":contrast="   +  strconv.itoa(fry ,)   +  ",unsharp=5:5:1.25:5:5:"   +  strconv.format_float(f64(fry ,)  /  6.66  ,`f` ,- 1  ,64 ,)   +  ",noise=alls="   +  strconv.itoa(fry  *  5  ,)   +  ":allf=t"  ,)
-}
-}
-}else {
-log.print("no video, ignoring all video filters" ,)
+  filter.write_string(","  +  "eq=saturation="   +  strconv.format_float(f64(fry ,)  *  0.15   +  0.85  ,`f` ,- 1  ,64 ,)   +  ":contrast="   +  strconv.itoa(fry ,)   +  ",unsharp=5:5:1.25:5:5:"   +  strconv.format_float(f64(fry ,)  /  6.66  ,`f` ,- 1  ,64 ,)   +  ",noise=alls="   +  strconv.itoa(fry  *  5  ,)   +  ":allf=t"  ,)
+  if debug {
+  log.print("fry is " ,","  +  "eq=saturation="   +  strconv.format_float(f64(fry ,)  *  0.15   +  0.85  ,`f` ,- 1  ,64 ,)   +  ":contrast="   +  strconv.itoa(fry ,)   +  ",unsharp=5:5:1.25:5:5:"   +  strconv.format_float(f64(fry ,)  /  6.66  ,`f` ,- 1  ,64 ,)   +  ",noise=alls="   +  strconv.itoa(fry  *  5  ,)   +  ":allf=t"  ,)
+  }
+  }
+  } else {
+  log.print("no video, ignoring all video filters" ,)
 }
 mut real_output_duration:=0.0 
 if out_duration  >=  inputData.duration   ||  out_duration  ==  - 1    {
-real_output_duration=(inputData.duration  -  start  )  /  speed   
-}else {
-real_output_duration=out_duration  /  speed   
+  real_output_duration=(inputData.duration  -  start  )  /  speed   
+  } else {
+  real_output_duration=out_duration  /  speed   
 }
 if renderAudio {
-if earrape {
-filter.write_string(";aeval=sgn(val(5)):c=same" ,)
-if debug {
-log.print("earrape is true" ,)
+  if earrape {
+    filter.write_string(";aeval=sgn(val(5)):c=same" ,)
+      if debug {
+        log.print("earrape is true" ,)
 }
 }
 if volume  !=  0  {
 if earrape {
-filter.write_string(",volume="  +  strconv.itoa(volume ,)   +  "dB"  ,)
-}else {
-filter.write_string(";volume="  +  strconv.itoa(volume ,)   +  "dB"  ,)
+  filter.write_string(",volume="  +  strconv.itoa(volume ,)   +  "dB"  ,)
+  } else {
+  filter.write_string(";volume="  +  strconv.itoa(volume ,)   +  "dB"  ,)
 }
 if debug {
-log.print("volume is " ,volume ,)
+  log.print("volume is " ,volume ,)
 }
 }
 if speed  !=  1  {
 if replace_audio  !=  ""  {
 filter.write_string(";[1]atempo="  +  strconv.format_float(speed ,`f` ,- 1  ,64 ,)  ,)
-}else {
+} else {
 filter.write_string(";[0]atempo="  +  strconv.format_float(speed ,`f` ,- 1  ,64 ,)  ,)
 }
 if debug {
