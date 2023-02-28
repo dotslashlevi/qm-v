@@ -1,2 +1,2 @@
 # qm-v
-Quality muncher in a shit language?!?!?
+Quality muncher in a goofy language?!?!?
