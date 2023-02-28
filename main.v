@@ -1,4 +1,5 @@
 module main
+
 import io
 import io.util
 import log
@@ -7,143 +8,155 @@ import os
 import strconv
 import strings
 import time
-import qm-go.ffprobe
-import qm-go.utils
-import github.com.flopp.go-findfont
+import qm-v.ffprobe
+import qm-v.utils
+import github.com.flopp.v-findfont
 import github.com.spf13.pflag
 import term
+
 const (
-output=''
-inputs=[]string{}
-debug=false
-overwrite=false
-progbar_length=0
-image_passes=0
-loglevel=''
-update_speed=0.0
-no_video,no_audio=false,false
-replace_audio=''
-preset=0
-start,end,out_duration=0.0,0.0,0.0
-volume=0
-earrape=false
-out_scale=0.0
-video_br_div,audio_br_div=0,0
-stretch=''
-out_fps=0
-speed=0.0
-zoom=0.0
-fadein,fadeout=0.0,0.0
-stutter=0
-vignette=0.0
-corrupt=0
-fry=0
-interlace=false
-lagfun=false
-resample=false
-text,text_font,text_color='','',''
-textposx,textposy=0,0
-font_size=0.0
-unspecified_progbar_size=false
-str_fmt=Formats{}
+  output=''
+  inputs=[]string{}
+  debug=false
+  overwrite=false
+  progbar_length=0
+  image_passes=0
+  loglevel=''
+  update_speed=0.0
+  no_video,no_audio=false,false
+  replace_audio=''
+  preset=0
+  start,end,out_duration=0.0,0.0,0.0
+  volume=0
+  earrape=false
+  out_scale=0.0
+  video_br_div,audio_br_div=0,0
+  stretch=''
+  out_fps=0
+  speed=0.0
+  zoom=0.0
+  fadein,fadeout=0.0,0.0
+  stutter=0
+  vignette=0.0
+  corrupt=0
+  fry=0
+  interlace=false
+  lagfun=false
+  resample=false
+  text,text_font,text_color='','',''
+  textposx,textposy=0,0
+  font_size=0.0
+  unspecified_progbar_size=false
+  str_fmt=Formats{}
 )
+
 struct Formats {
-mut:
-success string 
-success_hl string 
-warning string 
-warning_hl string 
-error string 
-error_hl string 
-info string 
-info_hl string 
-debug string 
-debug_hl string 
-working string 
-working_hl string 
-reset string 
+  mut:
+  success string 
+  success_hl string 
+  warning string 
+  warning_hl string 
+  error string 
+  error_hl string 
+  info string 
+  info_hl string 
+  debug string 
+  debug_hl string 
+  working string 
+  working_hl string 
+  reset string 
 }
-fn init() {str_fmt=Formats{
-success:"\033[32m"  ,
-success_hl:"\033[92m"  ,
-warning:"\033[38;2;250;169;30m"  ,
-warning_hl:"\033[38;2;250;182;37m"  ,
-error:"\033[31m"  ,
-error_hl:"\033[91m"  ,
-info:"\033[94m"  ,
-info_hl:"\033[36m"  ,
-debug:"\033[36m"  ,
-debug_hl:"\033[96m"  ,
-working:"\033[94m"  ,
-working_hl:"\033[36m"  ,
-reset:"\033[0m"  }  
-pflag.command_line.sort_flags=false  
-pflag.string_slice_var_p(& inputs  ,"input" ,"i" ,["" ] ,"Specify the input file(s)" ,)
-pflag.string_var_p(& output  ,"output" ,"o" ,"" ,"Specify the output file" ,)
-pflag.bool_var_p(& debug  ,"debug" ,"d" ,false ,"Print out debug information" ,)
-pflag.bool_var_p(& overwrite  ,"overwrite" ,"y" ,false ,"Overwrite the output file if it exists instead of prompting for confirmation" ,)
-pflag.int_var(& progbar_length  ,"progress-bar" ,- 1  ,"Length of progress bar, defaults based on terminal width" ,)
-pflag.int_var(& image_passes  ,"loop" ,1 ,"Number of time to compress the input. ONLY USED FOR IMAGES." ,)
-pflag.string_var(& loglevel  ,"loglevel" ,"error" ,"Specify the log level for ffmpeg" ,)
-pflag.float64_var(& update_speed  ,"update-speed" ,0.0167 ,"Specify the speed at which stats will be updated" ,)
-pflag.bool_var(& no_video  ,"no-video" ,false ,"Produces an output with no video" ,)
-pflag.bool_var(& no_audio  ,"no-audio" ,false ,"Produces an output with no audio" ,)
-pflag.string_var(& replace_audio  ,"replace-audio" ,"" ,"Replace the audio with the specified file" ,)
-pflag.int_var_p(& preset  ,"preset" ,"p" ,4 ,"Specify the quality preset (1-7, higher = worse)" ,)
-pflag.float64_var(& start  ,"start" ,0 ,"Specify the start time of the output" ,)
-pflag.float64_var(& end  ,"end" ,- 1  ,"Specify the end time of the output, cannot be used when duration is specified" ,)
-pflag.float64_var(& out_duration  ,"duration" ,- 1  ,"Specify the duration of the output, cannot be used when end is specified" ,)
-pflag.int_var_p(& volume  ,"volume" ,"v" ,0 ,"Specify the amount to increase or decrease the volume by, in dB" ,)
-pflag.bool_var(& earrape  ,"earrape" ,false ,"Heavily and extremely distort the audio (aka earrape). BE WARNED: VOLUME WILL BE SUBSTANTIALLY INCREASED." ,)
-pflag.float64_var_p(& out_scale  ,"scale" ,"s" ,- 1  ,"Specify the output scale" ,)
-pflag.int_var(& video_br_div  ,"video-bitrate" ,- 1  ,"Specify the video bitrate divisor (higher = worse)" ,)
-pflag.int_var(& video_br_div  ,"vb" ,video_br_div ,"Shorthand for --video-bitrate" ,)
-pflag.int_var(& audio_br_div  ,"audio-bitrate" ,- 1  ,"Specify the audio bitrate divisor (higher = worse)" ,)
-pflag.int_var(& audio_br_div  ,"ab" ,audio_br_div ,"Shorthand for --audio-bitrate" ,)
-pflag.string_var(& stretch  ,"stretch" ,"1:1" ,"Modify the existing aspect ratio" ,)
-pflag.int_var(& out_fps  ,"fps" ,- 1  ,"Specify the output fps (lower = worse)" ,)
-pflag.float64_var(& speed  ,"speed" ,1.0 ,"Specify the video and audio speed" ,)
-pflag.float64_var_p(& zoom  ,"zoom" ,"z" ,1 ,"Specify the amount to zoom in or out" ,)
-pflag.float64_var(& fadein  ,"fade-in" ,0 ,"Fade in duration" ,)
-pflag.float64_var(& fadeout  ,"fade-out" ,0 ,"Fade out duration" ,)
-pflag.int_var(& stutter  ,"stutter" ,0 ,"Randomize the order of a frames (higher = more stutter)" ,)
-pflag.float64_var(& vignette  ,"vignette" ,0 ,"Specify the amount of vignette" ,)
-pflag.int_var(& corrupt  ,"corrupt" ,0 ,"Corrupt the output (1-10, higher = worse)" ,)
-pflag.int_var(& fry  ,"deep-fry" ,0 ,"Deep-fry the output (1-10, higher = worse)" ,)
-pflag.bool_var(& interlace  ,"interlace" ,false ,"Interlace the output" ,)
-pflag.bool_var(& lagfun  ,"lagfun" ,false ,"Force darker pixels to update slower" ,)
-pflag.bool_var(& resample  ,"resample" ,false ,"Blend frames together instead of dropping them" ,)
-pflag.string_var_p(& text  ,"text" ,"t" ,"" ,"Text to add (if empty, no text)" ,)
-pflag.string_var(& text_font  ,"text-font" ,"arial" ,"Text to add (if empty, no text)" ,)
-pflag.string_var(& text_color  ,"text-color" ,"white" ,"Text color" ,)
-pflag.int_var(& textposx  ,"text-pos-x" ,50 ,"horizontal position of text (0 is far left, 100 is far right)" ,)
-pflag.int_var(& textposy  ,"text-pos-y" ,90 ,"vertical position of text (0 is top, 100 is bottom)" ,)
-pflag.float64_var(& font_size  ,"font-size" ,12 ,"Font size (scales with output width)" ,)
-pflag.parse()
-if inputs[0 ]  ==  ""  {
-log.fatal("No input was specified" ,)
-}
-if start  <  0  {
-log.fatal("Start time cannot be negative" ,)
-}
-if start  >=  end   &&  end  !=  - 1    {
-log.fatal("Start time cannot be greater than or equal to end time" ,)
-}
-if out_duration  !=  - 1    &&  end  !=  - 1    {
-log.fatal("Cannot specify both duration and end time" ,)
-}
-if progbar_length  ==  - 1   {
-unspecified_progbar_size=true  
-}else {
-unspecified_progbar_size=false  
-}
+
+fn init() {
+  str_fmt=Formats{
+    success:"\033[32m"  ,
+    success_hl:"\033[92m"  ,
+    warning:"\033[38;2;250;169;30m"  ,
+    warning_hl:"\033[38;2;250;182;37m"  ,
+    error:"\033[31m"  ,
+    error_hl:"\033[91m"  ,
+    info:"\033[94m"  ,
+    info_hl:"\033[36m"  ,
+    debug:"\033[36m"  ,
+    debug_hl:"\033[96m"  ,
+    working:"\033[94m"  ,
+    working_hl:"\033[36m"  ,
+    reset:"\033[0m"
+  }
+  
+  pflag.command_line.sort_flags=false  
+  pflag.string_slice_var_p(& inputs  ,"input" ,"i" ,["" ] ,"Specify the input file(s)" ,)
+  pflag.string_var_p(& output  ,"output" ,"o" ,"" ,"Specify the output file" ,)
+  pflag.bool_var_p(& debug  ,"debug" ,"d" ,false ,"Print out debug information" ,)
+  pflag.bool_var_p(& overwrite  ,"overwrite" ,"y" ,false ,"Overwrite the output file if it exists instead of prompting for confirmation" ,)
+  pflag.int_var(& progbar_length  ,"progress-bar" ,- 1  ,"Length of progress bar, defaults based on terminal width" ,)
+  pflag.int_var(& image_passes  ,"loop" ,1 ,"Number of time to compress the input. ONLY USED FOR IMAGES." ,)
+  pflag.string_var(& loglevel  ,"loglevel" ,"error" ,"Specify the log level for ffmpeg" ,)
+  pflag.float64_var(& update_speed  ,"update-speed" ,0.0167 ,"Specify the speed at which stats will be updated" ,)
+  pflag.bool_var(& no_video  ,"no-video" ,false ,"Produces an output with no video" ,)
+  pflag.bool_var(& no_audio  ,"no-audio" ,false ,"Produces an output with no audio" ,)
+  pflag.string_var(& replace_audio  ,"replace-audio" ,"" ,"Replace the audio with the specified file" ,)
+  pflag.int_var_p(& preset  ,"preset" ,"p" ,4 ,"Specify the quality preset (1-7, higher = worse)" ,)
+  pflag.float64_var(& start  ,"start" ,0 ,"Specify the start time of the output" ,)
+  pflag.float64_var(& end  ,"end" ,- 1  ,"Specify the end time of the output, cannot be used when duration is specified" ,)
+  pflag.float64_var(& out_duration  ,"duration" ,- 1  ,"Specify the duration of the output, cannot be used when end is specified" ,)
+  pflag.int_var_p(& volume  ,"volume" ,"v" ,0 ,"Specify the amount to increase or decrease the volume by, in dB" ,)
+  pflag.bool_var(& earrape  ,"earrape" ,false ,"Heavily and extremely distort the audio (aka earrape). BE WARNED: VOLUME WILL BE SUBSTANTIALLY INCREASED." ,)
+  pflag.float64_var_p(& out_scale  ,"scale" ,"s" ,- 1  ,"Specify the output scale" ,)
+  pflag.int_var(& video_br_div  ,"video-bitrate" ,- 1  ,"Specify the video bitrate divisor (higher = worse)" ,)
+  pflag.int_var(& video_br_div  ,"vb" ,video_br_div ,"Shorthand for --video-bitrate" ,)
+  pflag.int_var(& audio_br_div  ,"audio-bitrate" ,- 1  ,"Specify the audio bitrate divisor (higher = worse)" ,)
+  pflag.int_var(& audio_br_div  ,"ab" ,audio_br_div ,"Shorthand for --audio-bitrate" ,)
+  pflag.string_var(& stretch  ,"stretch" ,"1:1" ,"Modify the existing aspect ratio" ,)
+  pflag.int_var(& out_fps  ,"fps" ,- 1  ,"Specify the output fps (lower = worse)" ,)
+  pflag.float64_var(& speed  ,"speed" ,1.0 ,"Specify the video and audio speed" ,)
+  pflag.float64_var_p(& zoom  ,"zoom" ,"z" ,1 ,"Specify the amount to zoom in or out" ,)
+  pflag.float64_var(& fadein  ,"fade-in" ,0 ,"Fade in duration" ,)
+  pflag.float64_var(& fadeout  ,"fade-out" ,0 ,"Fade out duration" ,)
+  pflag.int_var(& stutter  ,"stutter" ,0 ,"Randomize the order of a frames (higher = more stutter)" ,)
+  pflag.float64_var(& vignette  ,"vignette" ,0 ,"Specify the amount of vignette" ,)
+  pflag.int_var(& corrupt  ,"corrupt" ,0 ,"Corrupt the output (1-10, higher = worse)" ,)
+  pflag.int_var(& fry  ,"deep-fry" ,0 ,"Deep-fry the output (1-10, higher = worse)" ,)
+  pflag.bool_var(& interlace  ,"interlace" ,false ,"Interlace the output" ,)
+  pflag.bool_var(& lagfun  ,"lagfun" ,false ,"Force darker pixels to update slower" ,)
+  pflag.bool_var(& resample  ,"resample" ,false ,"Blend frames together instead of dropping them" ,)
+  pflag.string_var_p(& text  ,"text" ,"t" ,"" ,"Text to add (if empty, no text)" ,)
+  pflag.string_var(& text_font  ,"text-font" ,"arial" ,"Text to add (if empty, no text)" ,)
+  pflag.string_var(& text_color  ,"text-color" ,"white" ,"Text color" ,)
+  pflag.int_var(& textposx  ,"text-pos-x" ,50 ,"horizontal position of text (0 is far left, 100 is far right)" ,)
+  pflag.int_var(& textposy  ,"text-pos-y" ,90 ,"vertical position of text (0 is top, 100 is bottom)" ,)
+  pflag.float64_var(& font_size  ,"font-size" ,12 ,"Font size (scales with output width)" ,)
+  pflag.parse()
+  
+  if inputs[0 ]  ==  ""  {
+    log.fatal("No input was specified" ,)
+  }
+
+  if start  <  0  {
+    log.fatal("Start time cannot be negative" ,)
+  }
+
+  if start  >=  end   &&  end  !=  - 1    {
+    log.fatal("Start time cannot be greater than or equal to end time" ,)
+  }
+
+  if out_duration  !=  - 1    &&  end  !=  - 1    {
+    log.fatal("Cannot specify both duration and end time" ,)
+  }
+
+  if progbar_length  ==  - 1   {
+    unspecified_progbar_size=true
+  } else {
+  unspecified_progbar_size=false
+  }
 }
 
 pub fn stream(input_1 string, stream_1 string) (bool, ) {mut args:=["-i" ,input_1 ,"-show_entries" ,"stream=index" ,"-select_streams" ,stream_1 ,"-of" ,"csv=p=0" ]  
 mut cmd:=exec.command("ffprobe" ,... args  ,)  
 mut out,err_1:=cmd.output()  
+
 if err_1  !=  unsafe { nil }  {
-return false 
+  return false 
 }
 return out .str() .len  !=  0  
 }
@@ -169,25 +182,31 @@ return out_width ,out_height
 
 fn make_text_filter(outWidth int, inText string, font string, size f64, color string, xpos int, ypos int) (string, ) {mut font_path,err_1:=findfont.find(font  +  ".ttf"  ,)  
 if err_1  !=  unsafe { nil }  {
-panic(err_1 ,)
+  panic(err_1 ,)
 }
-mut err_2:=os.mkdir_all("temp" ,os.mode_perm ,) 
+
+mut err_2:=os.mkdir_all("temp" ,os.mode_perm ,)
+
 if err_2  !=  unsafe { nil }  {
-log.fatal(err_2 ,)
+  log.fatal(err_2 ,)
 }
-mut input_2,err_3:=ioutil.read_file(font_path ,)  
+
+mut input_2,err_3:=ioutil.read_file(font_path ,)
+
 if err_3  !=  unsafe { nil }  {
-log.print(err_3 ,)
+  log.print(err_3 ,)
 }
-err_3=ioutil.write_file("temp/font.ttf" ,input_2 ,0644 ,)  
+
+err_3=ioutil.write_file("temp/font.ttf" ,input_2 ,0644 ,)
+
 if err_3  !=  unsafe { nil }  {
-log.fatal(str_fmt.error  +  "Fatal Error: unable to create temp/font.ttf"   +  str_fmt.reset  ,)
+  log.fatal(str_fmt.error  +  "Fatal Error: unable to create temp/font.ttf"   +  str_fmt.reset  ,)
 }
 mut filter_1:=",drawtext=fontfile='temp/font.ttf':text='"  +  inText   +  "':fontcolor="   +  color   +  ":borderw=("   +  strconv.format_float(size  *  f64(outWidth  /  100  ,)  ,`f` ,- 1  ,64 ,)   +  "/12):fontsize="   +  strconv.format_float(size  *  f64(outWidth  /  100  ,)  ,`f` ,- 1  ,64 ,)   +  ":x=(w-(tw))*("   +  strconv.itoa(xpos ,)   +  "/100):y=(h-(th))*("   +  strconv.itoa(ypos ,)   +  "/100)"   
 if debug {
-log.println("text is " ,inText ,)
-log.println("fontpath: " ,font_path ,)
-log.println(filter_1 ,)
+  log.println("text is " ,inText ,)
+  log.println("fontpath: " ,font_path ,)
+  log.println(filter_1 ,)
 }
 return filter_1 
 }
@@ -196,45 +215,52 @@ fn get_eta(startingTime time.Time, current f64, total f64) (f64, ) {return time.
 }
 
 fn image_munch(input_1 string, inputData ffprobe.MediaData, inNum int, totalNum int) {if debug {
-log.print("resolution is " ,inputData.width ," by " ,inputData.height ,)
+  log.print("resolution is " ,inputData.width ," by " ,inputData.height ,)
 }
+
 if out_scale  ==  - 1   {
-out_scale=1.0  /  f64(preset ,)   
+  out_scale=1.0  /  f64(preset ,)   
 }
+
 if debug {
-log.print("Output scale is " ,out_scale ,)
+  log.print("Output scale is " ,out_scale ,)
 }
+
 mut output_width,output_height:=new_resolution(inputData.width ,inputData.height ,)  
+
 mut filter:=strings.Builder{} 
+
 filter.write_string("scale="  +  strconv.itoa(output_width ,)   +  ":"   +  strconv.itoa(output_height ,)   +  ",setsar=1:1"  ,)
 if zoom  !=  1  {
-filter.write_string(",zoompan=d=1:zoom="  +  strconv.format_float(zoom ,`f` ,- 1  ,64 ,)   +  ":fps="   +  strconv.itoa(out_fps ,)   +  ":x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"  ,)
-if debug {
-log.print("zoom amount is " ,zoom ,)
+  filter.write_string(",zoompan=d=1:zoom="  +  strconv.format_float(zoom ,`f` ,- 1  ,64 ,)   +  ":fps="   +  strconv.itoa(out_fps ,)   +  ":x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"  ,)
+  if debug {
+  log.print("zoom amount is " ,zoom ,)
+  }
 }
-}
+
 if vignette  !=  0  {
-filter.write_string(",vignette=PI/(5/("  +  strconv.format_float(vignette ,`f` ,- 1  ,64 ,)   +  "/2))"  ,)
+  filter.write_string(",vignette=PI/(5/("  +  strconv.format_float(vignette ,`f` ,- 1  ,64 ,)   +  "/2))"  ,)
+
 if debug {
-log.print("vignette amount is " ,vignette ," or PI/(5/("  +  strconv.format_float(vignette ,`f` ,- 1  ,64 ,)   +  "/2))"  ,)
+  log.print("vignette amount is " ,vignette ," or PI/(5/("  +  strconv.format_float(vignette ,`f` ,- 1  ,64 ,)   +  "/2))"  ,)
 }
 }
 if text  !=  ""  {
-filter.write_string(make_text_filter(output_width ,text ,text_font ,font_size ,text_color ,textposx ,textposy ,) ,)
+  filter.write_string(make_text_filter(output_width ,text ,text_font ,font_size ,text_color ,textposx ,textposy ,) ,)
 }
 if fry  !=  0  {
-filter.write_string(","  +  "eq=saturation="   +  strconv.format_float(f64(fry ,)  *  0.15   +  0.85  ,`f` ,- 1  ,64 ,)   +  ":contrast="   +  strconv.itoa(fry ,)   +  ",unsharp=5:5:1.25:5:5:"   +  strconv.format_float(f64(fry ,)  /  6.66  ,`f` ,- 1  ,64 ,)   +  ",noise=alls="   +  strconv.itoa(fry  *  5  ,)   +  ":allf=t"  ,)
+  filter.write_string(","  +  "eq=saturation="   +  strconv.format_float(f64(fry ,)  *  0.15   +  0.85  ,`f` ,- 1  ,64 ,)   +  ":contrast="   +  strconv.itoa(fry ,)   +  ",unsharp=5:5:1.25:5:5:"   +  strconv.format_float(f64(fry ,)  /  6.66  ,`f` ,- 1  ,64 ,)   +  ",noise=alls="   +  strconv.itoa(fry  *  5  ,)   +  ":allf=t"  ,)
 if debug {
-log.print("fry is " ,","  +  "eq=saturation="   +  strconv.format_float(f64(fry ,)  *  0.15   +  0.85  ,`f` ,- 1  ,64 ,)   +  ":contrast="   +  strconv.itoa(fry ,)   +  ",unsharp=5:5:1.25:5:5:"   +  strconv.format_float(f64(fry ,)  /  6.66  ,`f` ,- 1  ,64 ,)   +  ",noise=alls="   +  strconv.itoa(fry  *  5  ,)   +  ":allf=t"  ,)
+  log.print("fry is " ,","  +  "eq=saturation="   +  strconv.format_float(f64(fry ,)  *  0.15   +  0.85  ,`f` ,- 1  ,64 ,)   +  ":contrast="   +  strconv.itoa(fry ,)   +  ",unsharp=5:5:1.25:5:5:"   +  strconv.format_float(f64(fry ,)  /  6.66  ,`f` ,- 1  ,64 ,)   +  ",noise=alls="   +  strconv.itoa(fry  *  5  ,)   +  ":allf=t"  ,)
 }
 }
 mut args:=["-y" ,"-loglevel" ,loglevel ,"-hide_banner" ,"-progress" ,"-" ,"-stats_period" ,strconv.format_float(update_speed ,`f` ,- 1  ,64 ,) ,"-i" ,input_1 ,"-c:v" ,"mjpeg" ,"-q:v" ,"31" ,"-frames:v" ,"1" ]  
 if filter.string() .len  !=  0  {
-args <<["-filter_complex" ,filter.string() ]   
+  args <<["-filter_complex" ,filter.string() ]   
 }
 args <<output   
 if debug {
-log.print(args ,)
+  log.print(args ,)
 }
 mut encoding_file_out_of:='' 
 if totalNum  !=  1  {
